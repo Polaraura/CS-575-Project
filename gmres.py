@@ -23,6 +23,19 @@ def gmres(A, b, num_max_iter=100, threshold=1e-14, precondition=False):
     # find initial residual
     r_original = b - A @ x
 
+    match precondition:
+        case True:
+            print("True")
+        case False:
+            print("False")
+        case other:
+            print("...")
+
+    # if precondition == precondition_enum.JACOBI:
+    #     M = sp_diags(A.diagonal(), offsets=0, format="csr")
+    #     r = spsolve(M, r_original)
+    # elif precondition
+
     # TODO: preconditioning
     if precondition:
         # M = sp_diags(A.diagonal(), offsets=0, format="csr")

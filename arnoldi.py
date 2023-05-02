@@ -5,6 +5,8 @@ from numpy.linalg import norm as np_norm
 from scipy.sparse.linalg import norm as sp_norm, spsolve
 from scipy.sparse import triu as sp_triu
 
+from precondition import precondition_enum
+
 
 def arnoldi(A, V, k, precondition=False, M=None):
     """
