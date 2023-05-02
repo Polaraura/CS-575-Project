@@ -26,7 +26,7 @@ def arnoldi(A, V, k, precondition=False, M=None):
     h_k = np.zeros((k + 2, ))
 
     match precondition:
-        case precondition_enum.JACOBI, precondition_enum.GAUSS_SEIDEL:
+        case precondition_enum.JACOBI | precondition_enum.GAUSS_SEIDEL:
             w = spsolve(M, A @ V[:, k])
         case precondition_enum.SYMMETRIC_GAUSS_SEIDEL:
             L, U = M

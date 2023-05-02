@@ -27,7 +27,7 @@ def gmres(A, b, num_max_iter=100, threshold=1e-14, precondition=False):
         case precondition_enum.JACOBI:
             M = sp_diags(A.diagonal(), offsets=0, format="csr")
             r = spsolve(M, r_original)
-        case precondition_enum.JACOBI:
+        case precondition_enum.GAUSS_SEIDEL:
             M = sp_tril(A, format="csr")
             r = spsolve(M, r_original)
         case precondition_enum.SYMMETRIC_GAUSS_SEIDEL:

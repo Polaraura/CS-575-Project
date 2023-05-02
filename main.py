@@ -14,14 +14,20 @@ if __name__ == '__main__':
     # m_array = [600, 1300, 2500, 5000, 1000, 2000]
     # m_array = [600, 1200, 2400, 4800, 9600, 19200]
     m_array = [400, 800, 1600, 3200, 6400, 12800]
+
     # b_array = [10, 50, 100, 500, 1000, 5000, 10000]
     b_array = [1]
 
     # starting with c = 0.75, convergence is consistent
-    c_array = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
+    c_array = [0.5, 1, 2, 4, 8]
 
     # TODO: do
-    precondition_array = [precondition_enum.GAUSS_SEIDEL]
+    # precondition_array = [precondition_enum.JACOBI,
+    #                       precondition_enum.GAUSS_SEIDEL,
+    #                       precondition_enum.SYMMETRIC_GAUSS_SEIDEL]
+    # precondition_array = [precondition_enum.name
+    #                       for p_enum in precondition_enum]
+    precondition_array = [None] + [p_enum for p_enum in precondition_enum]
 
     for m_value in m_array:
         for b in b_array:
