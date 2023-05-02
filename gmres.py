@@ -24,42 +24,52 @@ def gmres(A, b, num_max_iter=100, threshold=1e-14, precondition=False):
     r_original = b - A @ x
 
     match precondition:
-        case True:
-            print("True")
-        case False:
-            print("False")
-        case other:
-            print("...")
+        case precondition_enum.JACOBI:
+            M = sp_diags(A.diagonal(), offsets=0, format="csr")
+            r = spsolve(M, r_original)
+        case precondition_enum.JACOBI:
+            M = sp_tril(A, format="csr")
+            r = spsolve(M, r_original)
+        case precondition_enum.SYMMETRIC_GAUSS_SEIDEL:
+            D_vector = A.diagonal()
+            D_inv_vector = 1 / D_vector
+            D_inv = sp_diags(D_inv_vector, offsets=0, format="csr")
 
-    # if precondition == precondition_enum.JACOBI:
-    #     M = sp_diags(A.diagonal(), offsets=0, format="csr")
-    #     r = spsolve(M, r_original)
-    # elif precondition
+            L = sp_eye(m) + sp_tril(A, k=-1, format="csr") @ D_inv
+            U = sp_triu(A, format="csr")
+            M = [L, U]
+
+            z = spsolve(L, r_original)
+            r = spsolve(U, z)
+        # default case (None)
+        case _:
+            M = None
+            r = r_original
 
     # TODO: preconditioning
-    if precondition:
-        # M = sp_diags(A.diagonal(), offsets=0, format="csr")
-        # r = spsolve(M, r_original)
-
-        # M = sp_tril(A, format="csr")
-        # r = spsolve(M, r_original)
-
-        D_vector = A.diagonal()
-        D_inv_vector = 1 / D_vector
-        D_inv = sp_diags(D_inv_vector, offsets=0, format="csr")
-
-        L = sp_eye(m) + sp_tril(A, k=-1, format="csr") @ D_inv
-        U = sp_triu(A, format="csr")
-        M = [L, U]
-
-        z = spsolve(L, r_original)
-        r = spsolve(U, z)
-
-        # print(f"z: {z}")
-        # print(f"r: {r}")
-    else:
-        M = None
-        r = r_original
+    # if precondition:
+    #     # M = sp_diags(A.diagonal(), offsets=0, format="csr")
+    #     # r = spsolve(M, r_original)
+    #
+    #     # M = sp_tril(A, format="csr")
+    #     # r = spsolve(M, r_original)
+    #
+    #     D_vector = A.diagonal()
+    #     D_inv_vector = 1 / D_vector
+    #     D_inv = sp_diags(D_inv_vector, offsets=0, format="csr")
+    #
+    #     L = sp_eye(m) + sp_tril(A, k=-1, format="csr") @ D_inv
+    #     U = sp_triu(A, format="csr")
+    #     M = [L, U]
+    #
+    #     z = spsolve(L, r_original)
+    #     r = spsolve(U, z)
+    #
+    #     # print(f"z: {z}")
+    #     # print(f"r: {r}")
+    # else:
+    #     M = None
+    #     r = r_original
 
     # find initial norms
     # b_norm = sp_norm(b)

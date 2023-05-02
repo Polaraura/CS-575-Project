@@ -25,14 +25,25 @@ def arnoldi(A, V, k, precondition=False, M=None):
     # k starts at 0...
     h_k = np.zeros((k + 2, ))
 
-    if precondition:
-        # w = spsolve(M, A @ V[:, k])
+    match precondition:
+        case precondition_enum.JACOBI, precondition_enum.GAUSS_SEIDEL:
+            w = spsolve(M, A @ V[:, k])
+        case precondition_enum.SYMMETRIC_GAUSS_SEIDEL:
+            L, U = M
+            z = spsolve(L, A @ V[:, k])
+            w = spsolve(U, z)
+        # default case (None)
+        case _:
+            w = A @ V[:, k]
 
-        L, U = M
-        z = spsolve(L, A @ V[:, k])
-        w = spsolve(U, z)
-    else:
-        w = A @ V[:, k]
+    # if precondition:
+    #     # w = spsolve(M, A @ V[:, k])
+    #
+    #     L, U = M
+    #     z = spsolve(L, A @ V[:, k])
+    #     w = spsolve(U, z)
+    # else:
+    #     w = A @ V[:, k]
 
     # calculate first k elements of the kth Hessenberg column
     for i in range(k + 1):

@@ -7,6 +7,7 @@ from scipy.sparse.linalg import norm as sp_norm, spsolve
 from scipy.sparse import diags as sp_diags
 
 from gmres import gmres
+from precondition import precondition_enum
 
 
 if __name__ == '__main__':
@@ -20,7 +21,7 @@ if __name__ == '__main__':
     c_array = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
 
     # TODO: do
-    precondition_array = [True, False]
+    precondition_array = [precondition_enum.GAUSS_SEIDEL]
 
     for m_value in m_array:
         for b in b_array:
