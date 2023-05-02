@@ -77,36 +77,51 @@ def plot_figures(m_array,
     # ax = fig.add_axes([0, 0, 1, 1])
 
     c_value = c_array[0]
+    bottom_bar_array = []
 
-    for m_index, m_value in enumerate(m_array):
-        for precondition_index, precondition_type in enumerate(precondition_array):
-            if precondition_type is None:
-                # color='...'
-                # blue - b
-                plt.bar(bars_array[precondition_index],
-                        total_runtime_dict[m_value][c_value][precondition],
-                        width=barWidth,
-                        label=f"Not Preconditioned",
-                        log=1)
-            else:
-                precondition_name = str.lower(precondition_type.name).capitalize()
+    # for m_index, m_value in enumerate(m_array):
+    for precondition_index, precondition_type in enumerate(precondition_array):
+        # print(f"precondition: {precondition_type}")
+        if precondition_type is None:
+            total_runtime_array_c = [total_runtime_dict[m_value][c_value][precondition_type]
+                                     for m_value in m_array]
 
-                # changed from br3 -- stack the repartition time with new hybrid time
-                # change so output[3] is on bottom -- new repartitioned hybrid time
-                # red - r
-                plt.bar(bars_array[precondition_index],
-                        non_precondition_runtime_dict[m_value][c_value][precondition],
-                        width=barWidth,
-                        label=f"Unpreconditioned {precondition_name}",
-                        log=1)
+            # color='...'
+            # blue - b
+            plt.bar(bars_array[precondition_index],
+                    total_runtime_array_c,
+                    width=barWidth,
+                    label=f"Not Preconditioned",
+                    log=1)
+        else:
+            precondition_name = str.lower(precondition_type.name).capitalize()
 
-                # green - g
-                plt.bar(bars_array[precondition_index],
-                        precondition_runtime_dict[m_value][c_value][precondition],
-                        width=barWidth,
-                        label=f"Preconditioned {precondition_name}",
-                        bottom=non_precondition_runtime_dict[m_value][c_value][precondition],
-                        log=1)
+            non_precondition_runtime_array_c = [non_precondition_runtime_dict[m_value][c_value][precondition_type]
+                                                for m_value in m_array]
+            bottom_bar_array.append(non_precondition_runtime_array_c)
+            print(non_precondition_runtime_array_c)
+            print(non_precondition_runtime_dict)
+
+            # changed from br3 -- stack the repartition time with new hybrid time
+            # change so output[3] is on bottom -- new repartitioned hybrid time
+            # red - r
+            plt.bar(bars_array[precondition_index],
+                    non_precondition_runtime_array_c,
+                    width=barWidth,
+                    label=f"Unpreconditioned {precondition_name}",
+                    log=1)
+
+            precondition_runtime_array_c = [precondition_runtime_dict[m_value][c_value][precondition_type]
+                                            for m_value in m_array]
+
+            # bottom bar EXCLUDE None...
+            # green - g
+            plt.bar(bars_array[precondition_index],
+                    precondition_runtime_array_c,
+                    width=barWidth,
+                    label=f"Preconditioned {precondition_name}",
+                    bottom=bottom_bar_array[precondition_index - 1],
+                    log=1)
 
     ##########################
     # plot details
@@ -116,26 +131,36 @@ def plot_figures(m_array,
 
     offset = ((1 / 2) * (num_bars_per_group - 1)) * barWidth
 
-    # plt.legend()
+    plt.legend()
 
     plt.xticks([r + offset for r in range(m_len)],
                m_array)
 
     plt.savefig(f"test_runtime_timings_plot.png", bbox_inches="tight")
 
+    print(bottom_bar_array)
+
 
 if __name__ == '__main__':
     # m_array = [600, 1300, 2500, 5000, 1000, 2000]
     # m_array = [600, 1200, 2400, 4800, 9600, 19200]
     # m_array = [400, 800, 1600, 3200, 6400, 12800]
-    m_array = [12800, 20000]
+    m_array = [6400, 12800]
+
+    a = []
+    b = []
+    for i in range(3):
+        b = [1, 2, 3]
+        b.append(i)
+        a.append(b)
+    print(a)
 
     # b_array = [10, 50, 100, 500, 1000, 5000, 10000]
     # b_array = [1]
 
     # starting with c = 0.75, convergence is consistent
     # c_array = [0.5, 1, 2, 4, 8]
-    c_array = [1]
+    c_array = [2]
 
     # TODO: do
     # precondition_array = [precondition_enum.JACOBI,
