@@ -2,6 +2,8 @@ import numpy as np
 import scipy as sp
 import scipy.sparse
 
+from time import time
+
 from numpy.linalg import norm as np_norm, \
     solve as np_solve
 from scipy.sparse.linalg import norm as sp_norm, spsolve
@@ -18,11 +20,15 @@ def gmres(A, b, num_max_iter=100, threshold=1e-14, precondition=False):
     m, _ = A.shape
 
     # use zero vector as initial guess for x
-    x = np.zeros((m, ))
+    x = np.zeros((m,))
 
     # find initial residual
     r_original = b - A @ x
 
+    # total precondition time
+    total_precondition_time = 0
+
+    precondition_start_time = time()
     match precondition:
         case precondition_enum.JACOBI:
             M = sp_diags(A.diagonal(), offsets=0, format="csr")
@@ -45,6 +51,8 @@ def gmres(A, b, num_max_iter=100, threshold=1e-14, precondition=False):
         case _:
             M = None
             r = r_original
+    precondition_end_time = time()
+    total_precondition_time += (precondition_end_time - precondition_start_time)
 
     # TODO: preconditioning
     # if precondition:
@@ -79,11 +87,11 @@ def gmres(A, b, num_max_iter=100, threshold=1e-14, precondition=False):
     curr_error = r_norm / b_norm
 
     # initialize rotation vectors s and c
-    s_array = np.zeros((num_max_iter, ))
-    c_array = np.zeros((num_max_iter, ))
+    s_array = np.zeros((num_max_iter,))
+    c_array = np.zeros((num_max_iter,))
 
     # initialize e1 canonical vector
-    e1 = np.zeros((num_max_iter + 1, ))
+    e1 = np.zeros((num_max_iter + 1,))
     e1[0] = 1
 
     # save list of errors at each iteration
@@ -118,9 +126,13 @@ def gmres(A, b, num_max_iter=100, threshold=1e-14, precondition=False):
         # TODO: preconditioning
         # FIXME: 0 error
         # print(f"k = {k}")
-        H[:(k + 2), k], v_new = arnoldi(A, V, k,
-                                              precondition=precondition,
-                                              M=M)
+        H[:(k + 2), k], v_new, iter_precondition_time = \
+            arnoldi(A, V, k,
+                    precondition=precondition,
+                    M=M)
+
+        # update precondition time
+        total_precondition_time += iter_precondition_time
 
         if v_new is None:
             break
@@ -157,15 +169,4 @@ def gmres(A, b, num_max_iter=100, threshold=1e-14, precondition=False):
                  gamma_vector[:(k_final + 1)])
     x = x + V[:, :(k_final + 1)] @ y
 
-    return x, error_list, k_final + 1
-
-
-
-
-
-
-
-
-
-
-
+    return x, error_list, k_final + 1, total_precondition_time

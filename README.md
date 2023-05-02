@@ -12,6 +12,7 @@
 
 - `numpy`
 - `scipy` (for sparse format)
+- `matplotlib` (for plotting)
 
 ### Run Code
 
