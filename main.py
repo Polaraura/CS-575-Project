@@ -8,30 +8,40 @@ from time import time
 
 from numpy.linalg import norm as np_norm, \
     solve as np_solve
-from scipy.sparse.linalg import norm as sp_norm, spsolve
+from scipy.sparse.linalg import norm as sp_norm, spsolve, splu
 from scipy.sparse import diags as sp_diags
-from scipy.linalg import lu_factor, lu_solve
+# from scipy.linalg import lu_factor, lu_solve
 
 from gmres import gmres
-from precondition import precondition_enum
+from utilities_enum import PreconditionEnum, MethodsEnum
 
 
 def plot_figures(m_array,
                  c_array,
+                 methods_array,
+                 precondition_array,
+                 num_iter_dict,
+                 errors_dict,
+                 total_runtime_dict_true,
+                 total_runtime_dict_LU,
+                 total_runtime_dict,
+                 precondition_runtime_dict,
                  non_precondition_runtime_dict,
-                 precondition_array, num_iter_dict,
-                 errors_dict, total_runtime_dict_true,
-                 total_runtime_dict, precondition_runtime_dict,
                  num_max_iter,
                  plot_runtime=False, plot_error=False):
     # plot figures
     # Set position of bar on X axis
     m_len = len(m_array)
     c_len = len(c_array)
+
+    # FIXME: need to add 1 for LU (no preconditioners) and 1 for General solver
+    # need to subtract one because of GMRES (other methods besides GMRES)
+    methods_len = len(methods_array) - 1
     precondition_len = len(precondition_array)
 
     num_groups = m_len
-    num_bars_per_group = precondition_len
+
+    num_bars_per_group = precondition_len + methods_len
     barWidth = 1 / (num_bars_per_group + 1)
 
     br1 = np.arange(num_groups)
@@ -92,50 +102,81 @@ def plot_figures(m_array,
             # print(non_precondition_runtime_dict)
 
             # for m_index, m_value in enumerate(m_array):
+            for method_index, method_type in enumerate(methods_array):
+                match method_type:
+                    case MethodsEnum.GENERAL_SOLVER:
+                        total_runtime_array_general_c = [total_runtime_dict_true[m_value][c_value]
+                                                         for m_value in m_array]
 
-            for precondition_index, precondition_type in enumerate(precondition_array):
-                # print(f"precondition: {precondition_type}")
-                if precondition_type is None:
-                    total_runtime_array_c = [total_runtime_dict[m_value][c_value][precondition_type]
-                                             for m_value in m_array]
+                        # FIXME: always set to 0
+                        plt.bar(bars_array[0],
+                                total_runtime_array_general_c,
+                                width=barWidth,
+                                label=f"General Solver (built-in)",
+                                log=1)
 
-                    # color='...'
-                    # blue - b
-                    plt.bar(bars_array[precondition_index],
-                            total_runtime_array_c,
-                            width=barWidth,
-                            label=f"Not Preconditioned",
-                            log=1)
-                else:
-                    precondition_name = str.lower(precondition_type.name).capitalize()
+                    case MethodsEnum.LU:
+                        total_runtime_array_LU_c = [total_runtime_dict_LU[m_value][c_value]
+                                                         for m_value in m_array]
 
-                    non_precondition_runtime_array_c = [non_precondition_runtime_dict[m_value][c_value][precondition_type]
-                                                        for m_value in m_array]
-                    bottom_bar_array.append(non_precondition_runtime_array_c)
+                        # FIXME: always set to 1
+                        plt.bar(bars_array[1],
+                                total_runtime_array_LU_c,
+                                width=barWidth,
+                                label=f"LU (built-in)",
+                                log=1)
 
-                    # print(non_precondition_runtime_array_c)
-                    # print(non_precondition_runtime_dict)
+                    case MethodsEnum.GMRES:
+                        gmres_offset_index = methods_len
 
-                    # changed from br3 -- stack the repartition time with new hybrid time
-                    # change so output[3] is on bottom -- new repartitioned hybrid time
-                    # red - r
-                    plt.bar(bars_array[precondition_index],
-                            non_precondition_runtime_array_c,
-                            width=barWidth,
-                            label=f"Un-precondition {precondition_name}",
-                            log=1)
+                        for precondition_index, precondition_type in enumerate(precondition_array):
+                            precondition_index_adjusted = precondition_index + gmres_offset_index
 
-                    precondition_runtime_array_c = [precondition_runtime_dict[m_value][c_value][precondition_type]
-                                                    for m_value in m_array]
+                            # print(f"precondition: {precondition_type}")
+                            if precondition_type is None:
+                                total_runtime_array_c = [total_runtime_dict[m_value][c_value][precondition_type]
+                                                         for m_value in m_array]
 
-                    # bottom bar EXCLUDE None...
-                    # green - g
-                    plt.bar(bars_array[precondition_index],
-                            precondition_runtime_array_c,
-                            width=barWidth,
-                            label=f"Precondition {precondition_name}",
-                            bottom=bottom_bar_array[precondition_index - 1],
-                            log=1)
+                                # color='...'
+                                # blue - b
+                                plt.bar(bars_array[precondition_index_adjusted],
+                                        total_runtime_array_c,
+                                        width=barWidth,
+                                        label=f"Not Preconditioned",
+                                        log=1)
+                            else:
+                                precondition_name = str.lower(precondition_type.name).capitalize()
+
+                                non_precondition_runtime_array_c = [non_precondition_runtime_dict[m_value][c_value][precondition_type]
+                                                                    for m_value in m_array]
+                                bottom_bar_array.append(non_precondition_runtime_array_c)
+
+                                # print(non_precondition_runtime_array_c)
+                                # print(non_precondition_runtime_dict)
+
+                                # changed from br3 -- stack the repartition time with new hybrid time
+                                # change so output[3] is on bottom -- new repartitioned hybrid time
+                                # red - r
+                                plt.bar(bars_array[precondition_index_adjusted],
+                                        non_precondition_runtime_array_c,
+                                        width=barWidth,
+                                        label=f"Un-precondition {precondition_name}",
+                                        log=1)
+
+                                precondition_runtime_array_c = [precondition_runtime_dict[m_value][c_value][precondition_type]
+                                                                for m_value in m_array]
+
+                                # bottom bar EXCLUDE None...
+                                # green - g
+                                plt.bar(bars_array[precondition_index_adjusted],
+                                        precondition_runtime_array_c,
+                                        width=barWidth,
+                                        label=f"Precondition {precondition_name}",
+                                        bottom=bottom_bar_array[precondition_index - 1],
+                                        log=1)
+
+                    case _:
+                        raise ValueError("Invalid method type...")
 
             ##########################
             # plot details
@@ -234,8 +275,8 @@ if __name__ == '__main__':
     #                       precondition_enum.SYMMETRIC_GAUSS_SEIDEL]
     # precondition_array = [precondition_enum.name
     #                       for p_enum in precondition_enum]
-    methods_array = []
-    precondition_array = [None] + [p_enum for p_enum in precondition_enum]
+    methods_array = [m_enum for m_enum in MethodsEnum]
+    precondition_array = [None] + [p_enum for p_enum in PreconditionEnum]
 
     num_iter_dict = {}
     errors_dict = {}
@@ -245,7 +286,7 @@ if __name__ == '__main__':
     non_precondition_runtime_dict = {}
     precondition_runtime_dict = {}
 
-    print(f"len enum: {len(precondition_enum)}")
+    print(f"len enum: {len(PreconditionEnum)}")
     print()
 
     for m_value in m_array:
@@ -268,43 +309,62 @@ if __name__ == '__main__':
 
             print(f"m: {m_value}")
             print(f"c: {c_value}")
+            print()
+
+            #########################################
+
+            # m = 20000
+
+            ones_diag = np.ones((m_value - 1,))
+            twos_diag = np.ones((m_value,))
+
+            # b = 900
+            # a = 1
+            # R = b / a
+            # h = 1 / (m_value + 1)
+
+            # FIXME
+            # c = R * h
+
+            A = sp_diags(
+                [-(ones_diag - c_value), twos_diag + c_value, -ones_diag],
+                offsets=[-1, 0, 1],
+                format="csr")
+            # b = np.ones((m, ))
+            y = np.zeros((m_value,))
+            y[-1] = 1
+            # b = np.random.random((m, ))
+
+            start_time_true = time()
+            x_true = spsolve(A, y)
+            end_time_true = time()
+
+            start_time_LU = time()
+            # lu, piv = lu_factor(A)
+            # x_LU = lu_solve((lu, piv), y)
+
+            # find LU factorization and solve it (get Solve object and call solve on it)
+            LU_solve = splu(A)
+            x_LU = LU_solve.solve(y)
+
+            end_time_LU = time()
+
+            print(f"LU error: {np_norm(x_true - x_LU)}")
+            print()
+
+            total_time_true = end_time_true - start_time_true
+            total_time_LU = end_time_LU - start_time_LU
+
+            # FIXME: not dependent on precondition
+            total_runtime_dict_true[m_value][c_value] = \
+                total_time_true
+            total_runtime_dict_LU[m_value][c_value] = \
+                total_time_LU
+
+            #########################################
 
             for precondition in precondition_array:
                 print(f"precondition: {precondition}")
-
-                # m = 20000
-
-                ones_diag = np.ones((m_value - 1,))
-                twos_diag = np.ones((m_value,))
-
-                # b = 900
-                # a = 1
-                # R = b / a
-                # h = 1 / (m_value + 1)
-
-                # FIXME
-                # c = R * h
-
-                A = sp_diags(
-                    [-(ones_diag - c_value), twos_diag + c_value, -ones_diag],
-                    offsets=[-1, 0, 1],
-                    format="csr")
-                # b = np.ones((m, ))
-                y = np.zeros((m_value,))
-                y[-1] = 1
-                # b = np.random.random((m, ))
-
-                start_time_true = time()
-                x_true = spsolve(A, y)
-                end_time_true = time()
-
-                start_time_LU = time()
-                lu, piv = lu_factor(A)
-                x_LU = lu_solve((lu, piv), b)
-                end_time_LU = time()
-
-                total_time_true = end_time_true - start_time_true
-                total_time_LU = end_time_LU - start_time_LU
 
                 start_time = time()
                 x_gmres, error_list, k_final, precondition_time = \
@@ -317,10 +377,6 @@ if __name__ == '__main__':
 
                 num_iter_dict[m_value][c_value][precondition] = k_final
                 errors_dict[m_value][c_value][precondition] = error_list
-                total_runtime_dict_true[m_value][c_value][precondition] = \
-                    total_time_true
-                total_runtime_dict_LU[m_value][c_value][precondition] = \
-                    total_time_LU
                 total_runtime_dict[m_value][c_value][precondition] = \
                     total_time
                 precondition_runtime_dict[m_value][c_value][precondition] = \
@@ -345,6 +401,6 @@ if __name__ == '__main__':
 
 
     # plot the graphs
-    plot_figures(m_array, c_array, non_precondition_runtime_dict, precondition_array, num_iter_dict, errors_dict,
-                 total_runtime_dict_true, total_runtime_dict, precondition_runtime_dict, num_max_iter,
-                 plot_runtime=True, plot_error=True)
+    plot_figures(m_array, c_array, methods_array, precondition_array, num_iter_dict, errors_dict,
+                 total_runtime_dict_true, total_runtime_dict_LU, total_runtime_dict, precondition_runtime_dict,
+                 non_precondition_runtime_dict, num_max_iter, plot_runtime=True, plot_error=True)

@@ -12,7 +12,7 @@ from scipy.sparse import diags as sp_diags, \
 
 from arnoldi import arnoldi
 from givens_rotation import givens_rotation
-from precondition import precondition_enum
+from utilities_enum import PreconditionEnum
 
 
 # threshold=1e-10
@@ -30,13 +30,13 @@ def gmres(A, b, num_max_iter=100, threshold=1e-14, precondition=False):
 
     precondition_start_time = time()
     match precondition:
-        case precondition_enum.JACOBI:
+        case PreconditionEnum.JACOBI:
             M = sp_diags(A.diagonal(), offsets=0, format="csr")
             r = spsolve(M, r_original)
-        case precondition_enum.GAUSS_SEIDEL:
+        case PreconditionEnum.GAUSS_SEIDEL:
             M = sp_tril(A, format="csr")
             r = spsolve(M, r_original)
-        case precondition_enum.SYMMETRIC_GAUSS_SEIDEL:
+        case PreconditionEnum.SYMMETRIC_GAUSS_SEIDEL:
             D_vector = A.diagonal()
             D_inv_vector = 1 / D_vector
             D_inv = sp_diags(D_inv_vector, offsets=0, format="csr")

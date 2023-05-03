@@ -7,7 +7,7 @@ from numpy.linalg import norm as np_norm
 from scipy.sparse.linalg import norm as sp_norm, spsolve
 from scipy.sparse import triu as sp_triu
 
-from precondition import precondition_enum
+from utilities_enum import PreconditionEnum
 
 
 def arnoldi(A, V, k, precondition=False, M=None):
@@ -29,9 +29,9 @@ def arnoldi(A, V, k, precondition=False, M=None):
 
     precondition_start_time = time()
     match precondition:
-        case precondition_enum.JACOBI | precondition_enum.GAUSS_SEIDEL:
+        case PreconditionEnum.JACOBI | PreconditionEnum.GAUSS_SEIDEL:
             w = spsolve(M, A @ V[:, k])
-        case precondition_enum.SYMMETRIC_GAUSS_SEIDEL:
+        case PreconditionEnum.SYMMETRIC_GAUSS_SEIDEL:
             L, U = M
             z = spsolve(L, A @ V[:, k])
             w = spsolve(U, z)
