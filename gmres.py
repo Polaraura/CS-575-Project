@@ -11,7 +11,7 @@ from scipy.sparse import diags as sp_diags, \
     tril as sp_tril, eye as sp_eye, triu as sp_triu
 
 from arnoldi import arnoldi
-from givens_rotation import givens_rotation
+from plane_rotation import plane_rotation
 from utilities_enum import PreconditionEnum
 
 
@@ -53,31 +53,6 @@ def gmres(A, b, num_max_iter=100, threshold=1e-14, precondition=False):
             r = r_original
     precondition_end_time = time()
     total_precondition_time += (precondition_end_time - precondition_start_time)
-
-    # TODO: preconditioning
-    # if precondition:
-    #     # M = sp_diags(A.diagonal(), offsets=0, format="csr")
-    #     # r = spsolve(M, r_original)
-    #
-    #     # M = sp_tril(A, format="csr")
-    #     # r = spsolve(M, r_original)
-    #
-    #     D_vector = A.diagonal()
-    #     D_inv_vector = 1 / D_vector
-    #     D_inv = sp_diags(D_inv_vector, offsets=0, format="csr")
-    #
-    #     L = sp_eye(m) + sp_tril(A, k=-1, format="csr") @ D_inv
-    #     U = sp_triu(A, format="csr")
-    #     M = [L, U]
-    #
-    #     z = spsolve(L, r_original)
-    #     r = spsolve(U, z)
-    #
-    #     # print(f"z: {z}")
-    #     # print(f"r: {r}")
-    # else:
-    #     M = None
-    #     r = r_original
 
     # find initial norms
     # b_norm = sp_norm(b)
@@ -142,7 +117,7 @@ def gmres(A, b, num_max_iter=100, threshold=1e-14, precondition=False):
 
         # apply Givens rotation and eliminate last element in kth column of H
         H[:(k + 2), k], s_array[k], c_array[k] = \
-            givens_rotation(H, c_array, s_array, k)
+            plane_rotation(H, c_array, s_array, k)
 
         # update residuals and error
         gamma_vector[k + 1] = -s_array[k] * gamma_vector[k]

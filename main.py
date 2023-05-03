@@ -79,26 +79,6 @@ def plot_figures(m_array,
             # ax.tick_params(axis="both", bottom=False, left=False)
             plt.tick_params(axis="both", which="both", bottom=False, left=False)
 
-            # # Third, add a horizontal grid (but keep the vertical grid hidden).
-            # # Color the lines a light gray as well.
-            # ax.set_axisbelow(True)
-            # ax.yaxis.grid(True, which="both", color='#EEEEEE', linestyle='dotted')
-            # ax.xaxis.grid(False)
-
-            # plt.grid(axis='y', which='both', linestyle='dotted', linewidth=0.5)
-            # plt.grid(axis='y', which='both', linestyle='dotted')
-
-            # fig.tight_layout()
-
-            # zorder before plotting...
-            # ax.set_axisbelow(True)
-            # plt.grid(True, axis="y", which="both", linestyle='dotted', zorder=0)
-            # plt.grid(True, axis="y", color='#EEEEEE', which="both",
-            #          linestyle='dotted')
-            # check if the grid looks good...
-
-            # ax = fig.add_axes([0, 0, 1, 1])
-
             # c_value = c_array[0]
             bottom_bar_array = []
 
@@ -261,32 +241,13 @@ if __name__ == '__main__':
     num_max_iter = 100
     threshold = 1e-14
 
-    # m_array = [600, 1300, 2500, 5000, 1000, 2000]
-    # m_array = [600, 1200, 2400, 4800, 9600, 19200]
     m_array = [400, 800, 1600, 3200, 6400, 12800]
     # m_array = [6400, 12800]
-
-    # a = []
-    # b = []
-    # for i in range(3):
-    #     b = [1, 2, 3]
-    #     b.append(i)
-    #     a.append(b)
-    # print(a)
-
-    # b_array = [10, 50, 100, 500, 1000, 5000, 10000]
-    # b_array = [1]
 
     # starting with c = 0.75, convergence is consistent
     c_array = [0.5, 1, 10, 100, 1000]
     # c_array = [0.5]
 
-    # TODO: do
-    # precondition_array = [precondition_enum.JACOBI,
-    #                       precondition_enum.GAUSS_SEIDEL,
-    #                       precondition_enum.SYMMETRIC_GAUSS_SEIDEL]
-    # precondition_array = [precondition_enum.name
-    #                       for p_enum in precondition_enum]
     methods_array = [m_enum for m_enum in MethodsEnum]
     precondition_array = [None] + [p_enum for p_enum in PreconditionEnum]
 

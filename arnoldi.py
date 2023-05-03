@@ -27,6 +27,7 @@ def arnoldi(A, V, k, precondition=False, M=None):
     # k starts at 0...
     h_k = np.zeros((k + 2, ))
 
+    # apply the preconditioning at each iteration step
     precondition_start_time = time()
     match precondition:
         case PreconditionEnum.JACOBI | PreconditionEnum.GAUSS_SEIDEL:
@@ -41,15 +42,6 @@ def arnoldi(A, V, k, precondition=False, M=None):
     precondition_end_time = time()
     iter_precondition_time = precondition_end_time - precondition_start_time
 
-    # if precondition:
-    #     # w = spsolve(M, A @ V[:, k])
-    #
-    #     L, U = M
-    #     z = spsolve(L, A @ V[:, k])
-    #     w = spsolve(U, z)
-    # else:
-    #     w = A @ V[:, k]
-
     # calculate first k elements of the kth Hessenberg column
     for i in range(k + 1):
         h_k[i] = w @ V[:, i]
@@ -60,8 +52,10 @@ def arnoldi(A, V, k, precondition=False, M=None):
 
     # check if 0
     if h_k[k + 1] == 0:
+        # None for v to check in gmres (early termination with EXACT SOLUTION)
         return h_k, None, 0
     else:
+        # find the new orthogonal vector in the basis of the Krylov subspace
         # assert h_k[k + 1] != 0
         v_new = w / h_k[k + 1]
 
