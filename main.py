@@ -1,5 +1,6 @@
 import numpy as np
 import scipy as sp
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import rc
 rc('text', usetex=True)
@@ -83,7 +84,9 @@ def plot_figures(m_array,
             # ax.set_axisbelow(True)
             # ax.yaxis.grid(True, which="both", color='#EEEEEE', linestyle='dotted')
             # ax.xaxis.grid(False)
-            plt.grid(axis='y', which='both', linestyle='dotted', linewidth=0.5)
+
+            # plt.grid(axis='y', which='both', linestyle='dotted', linewidth=0.5)
+            # plt.grid(axis='y', which='both', linestyle='dotted')
 
             # fig.tight_layout()
 
@@ -186,12 +189,12 @@ def plot_figures(m_array,
 
             offset = ((1 / 2) * (num_bars_per_group - 1)) * barWidth
 
-            plt.legend()
+            plt.legend(loc='upper left')
 
             plt.xticks([r + offset for r in range(m_len)],
                        m_array)
 
-            plt.grid(which='both', linestyle='dotted', linewidth=0.5)
+            plt.grid(True, axis='y', which='both', linestyle='dotted')
 
             plt.savefig(f"new_figures/gmres_runtime_timings_plot_c={c_value}.png", bbox_inches="tight")
 
@@ -240,7 +243,16 @@ def plot_figures(m_array,
                 plt.ylabel(r"Residual $\min{||\beta e_1 - \bar{H}_m y||}_2$")
                 plt.title(f"Residual (c={c_value}, m={m_value})")
 
-                plt.legend()
+                plt.legend(loc='upper right')
+
+                # FIXME: doesn't work...to add minor ticks in
+                ax.set_yscale("log")
+                plt.tick_params(axis="both", which="both", left=True, bottom=True)
+                locmin = matplotlib.ticker.LogLocator(base=10.0, subs=(0.2, 0.4, 0.6, 0.8), numticks=12)
+                ax.yaxis.set_minor_locator(locmin)
+                ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+
+                plt.grid(True, which='both', linestyle='dotted')
 
                 plt.savefig(f"new_figures/gmres_residual_plot_c={c_value}_m={m_value}.png", bbox_inches="tight")
 
@@ -251,8 +263,8 @@ if __name__ == '__main__':
 
     # m_array = [600, 1300, 2500, 5000, 1000, 2000]
     # m_array = [600, 1200, 2400, 4800, 9600, 19200]
-    # m_array = [400, 800, 1600, 3200, 6400, 12800]
-    m_array = [6400, 12800]
+    m_array = [400, 800, 1600, 3200, 6400, 12800]
+    # m_array = [6400, 12800]
 
     # a = []
     # b = []
@@ -266,8 +278,8 @@ if __name__ == '__main__':
     # b_array = [1]
 
     # starting with c = 0.75, convergence is consistent
-    # c_array = [0.5, 1, 10, 100, 1000]
-    c_array = [10]
+    c_array = [0.5, 1, 10, 100, 1000]
+    # c_array = [0.5]
 
     # TODO: do
     # precondition_array = [precondition_enum.JACOBI,
@@ -398,7 +410,6 @@ if __name__ == '__main__':
                 print(f"precondition time: {precondition_time}")
                 print(f"non-precondition time: {non_precondition_time}")
                 print()
-
 
     # plot the graphs
     plot_figures(m_array, c_array, methods_array, precondition_array, num_iter_dict, errors_dict,

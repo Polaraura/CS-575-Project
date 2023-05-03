@@ -135,6 +135,7 @@ def gmres(A, b, num_max_iter=100, threshold=1e-14, precondition=False):
         total_precondition_time += iter_precondition_time
 
         if v_new is None:
+            print(f"ENCOUNTER EXACT SOLUTION")
             break
         else:
             V[:, k + 1] = v_new

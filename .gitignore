@@ -162,6 +162,7 @@ cython_debug/
 #####################################
 # Personal Additions
 old_figures
+old_figures
 new_figures
 
 gmres_residual*
