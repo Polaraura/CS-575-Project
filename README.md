@@ -21,3 +21,8 @@
 ```python{cmd}
 $ python main.py
 ```
+
+### Extra Files
+
+- `output.txt` has a copy of the output given when running the program (plots will be given separately to reduce 
+  code size)
