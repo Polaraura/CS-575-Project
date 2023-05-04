@@ -1,13 +1,8 @@
 import numpy as np
-import scipy as sp
-
-from time import time
 
 from numpy.linalg import norm as np_norm
-from scipy.sparse.linalg import norm as sp_norm, spsolve
-from scipy.sparse import triu as sp_triu
 
-from utilities_enum import PreconditionEnum
+from preconditioning import iter_precondition_gmres
 
 
 def arnoldi(A, V, k, precondition=False, M=None):
@@ -27,20 +22,7 @@ def arnoldi(A, V, k, precondition=False, M=None):
     # k starts at 0...
     h_k = np.zeros((k + 2, ))
 
-    # apply the preconditioning at each iteration step
-    precondition_start_time = time()
-    match precondition:
-        case PreconditionEnum.JACOBI | PreconditionEnum.GAUSS_SEIDEL:
-            w = spsolve(M, A @ V[:, k])
-        case PreconditionEnum.SYMMETRIC_GAUSS_SEIDEL:
-            L, U = M
-            z = spsolve(L, A @ V[:, k])
-            w = spsolve(U, z)
-        # default case (None)
-        case _:
-            w = A @ V[:, k]
-    precondition_end_time = time()
-    iter_precondition_time = precondition_end_time - precondition_start_time
+    iter_precondition_time, w = iter_precondition_gmres(A, M, V, k, precondition)
 
     # calculate first k elements of the kth Hessenberg column
     for i in range(k + 1):
@@ -62,8 +44,3 @@ def arnoldi(A, V, k, precondition=False, M=None):
     # v_new = w / h_k[k + 1]
 
     return h_k, v_new, iter_precondition_time
-
-
-
-
-

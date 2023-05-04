@@ -14,6 +14,10 @@
 - `scipy` (for sparse format)
 - `matplotlib` (for plotting)
 
+**Note**: need to have `LaTeX` installed to generate the formatted text in the plots (can comment out `rc('text', 
+usetex=True)` at the beginning of `main.py`) and readjust correspond lines in `plot_figures()` function (look at 
+errors produced to find lines)
+
 ### Run Code
 
 `cd` into the root of the repo and run the following command below

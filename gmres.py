@@ -1,22 +1,15 @@
 import numpy as np
-import scipy as sp
-import scipy.sparse
-
-from time import time
 
 from numpy.linalg import norm as np_norm, \
     solve as np_solve
-from scipy.sparse.linalg import norm as sp_norm, spsolve
-from scipy.sparse import diags as sp_diags, \
-    tril as sp_tril, eye as sp_eye, triu as sp_triu
 
 from arnoldi import arnoldi
 from plane_rotation import plane_rotation
-from utilities_enum import PreconditionEnum
+from preconditioning import initial_precondition
 
 
 # threshold=1e-10
-def gmres(A, b, num_max_iter=100, threshold=1e-14, precondition=False):
+def gmres(A, b, num_max_iter=100, threshold=1e-14, precondition=None):
     m, _ = A.shape
 
     # use zero vector as initial guess for x
@@ -25,34 +18,9 @@ def gmres(A, b, num_max_iter=100, threshold=1e-14, precondition=False):
     # find initial residual
     r_original = b - A @ x
 
-    # total precondition time
-    total_precondition_time = 0
-
-    precondition_start_time = time()
-    match precondition:
-        case PreconditionEnum.JACOBI:
-            M = sp_diags(A.diagonal(), offsets=0, format="csr")
-            r = spsolve(M, r_original)
-        case PreconditionEnum.GAUSS_SEIDEL:
-            M = sp_tril(A, format="csr")
-            r = spsolve(M, r_original)
-        case PreconditionEnum.SYMMETRIC_GAUSS_SEIDEL:
-            D_vector = A.diagonal()
-            D_inv_vector = 1 / D_vector
-            D_inv = sp_diags(D_inv_vector, offsets=0, format="csr")
-
-            L = sp_eye(m) + sp_tril(A, k=-1, format="csr") @ D_inv
-            U = sp_triu(A, format="csr")
-            M = [L, U]
-
-            z = spsolve(L, r_original)
-            r = spsolve(U, z)
-        # default case (None)
-        case _:
-            M = None
-            r = r_original
-    precondition_end_time = time()
-    total_precondition_time += (precondition_end_time - precondition_start_time)
+    # apply initial preconditioning
+    M, r, total_precondition_time = \
+        initial_precondition(A, m, precondition, r_original)
 
     # find initial norms
     # b_norm = sp_norm(b)
@@ -111,6 +79,9 @@ def gmres(A, b, num_max_iter=100, threshold=1e-14, precondition=False):
 
         if v_new is None:
             print(f"ENCOUNTER EXACT SOLUTION")
+
+            # append 0 for plots...
+            error_list.append(0)
             break
         else:
             V[:, k + 1] = v_new
@@ -146,3 +117,5 @@ def gmres(A, b, num_max_iter=100, threshold=1e-14, precondition=False):
     x = x + V[:, :(k_final + 1)] @ y
 
     return x, error_list, k_final + 1, total_precondition_time
+
+

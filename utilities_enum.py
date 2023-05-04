@@ -7,7 +7,12 @@ class PreconditionEnum(Enum):
     SYMMETRIC_GAUSS_SEIDEL = auto(),
 
 
-class MethodsEnum(Enum):
+class BuiltInMethodsEnum(Enum):
     GENERAL_SOLVER = auto(),
     LU = auto(),
+    # GMRES = auto(),
+
+
+class ImplementationMethodsEnum(Enum):
     GMRES = auto(),
+    CG = auto(),
